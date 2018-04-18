@@ -34,20 +34,20 @@ import java.util.List;
 public class MainActivity extends Activity implements View.OnClickListener {
     private static final int PERMISSION_CODES = 1001;
     private static final int REQUEST_RECORD = 2001;
+    private static final String[] PERMISSIONS = new String[]{
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    int min = 2000;
+    int max = 30000;
+    int gop = 5;
     private boolean permissionGranted = true;
     private Button mStartRecordBT;
     private int resolutionMode, ratioMode;
     private String[] eff_dirs;
     private AliyunSnapVideoParam recordParam;
     private VideoQuality videoQuality;
-    int min = 2000;
-    int max = 30000;
-    int gop = 5;
-    private static final String[] PERMISSIONS = new String[]{
-            Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,11 +61,24 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mStartRecordBT.setOnClickListener(this);
     }
 
+    @TargetApi(Build.VERSION_CODES.M)
+    private void requestPermission() {
+        List<String> p = new ArrayList<>();
+        for (String permission : PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                p.add(permission);
+            }
+        }
+        if (p.size() > 0) {
+            requestPermissions(p.toArray(new String[p.size()]), PERMISSION_CODES);
+        }
+    }
+
     private void initParam() {
         String path = StorageUtils.getCacheDirectory(this).getAbsolutePath() + File.separator + Utils.QU_NAME + File.separator;
         File filter = new File(new File(path), "filter");
         String[] list = filter.list();
-        if(list == null){
+        if (list == null) {
             list = new String[]{""};
         }
         videoQuality = VideoQuality.SD;
@@ -103,12 +116,19 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     @Override
-    public void onClick(View view) {
-        //隐士调用
-//        Intent recorder = new Intent("com.aliyun.action.snaprecorder");
-//        startActivity(recorder);
-        //直接开始录制
-        AliyunVideoRecorder.startRecordForResult(this, REQUEST_RECORD, recordParam);
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_CODES:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                    ToastUtil.showToast(this, getString(R.string.need_permission));
+                    permissionGranted = false;
+                } else {
+                    permissionGranted = true;
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
@@ -128,34 +148,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-
-    @TargetApi(Build.VERSION_CODES.M)
-    private void requestPermission() {
-        List<String> p = new ArrayList<>();
-        for (String permission : PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                p.add(permission);
-            }
-        }
-        if (p.size() > 0) {
-            requestPermissions(p.toArray(new String[p.size()]), PERMISSION_CODES);
-        }
-    }
-
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSION_CODES:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
-                    ToastUtil.showToast(this, getString(R.string.need_permission));
-                    permissionGranted = false;
-                } else {
-                    permissionGranted = true;
-                }
-                break;
-            default:
-                break;
-        }
+    public void onClick(View view) {
+        //隐士调用
+//        Intent recorder = new Intent("com.aliyun.action.snaprecorder");
+//        startActivity(recorder);
+        //直接开始录制
+        AliyunVideoRecorder.startRecordForResult(this, REQUEST_RECORD, recordParam);
     }
+
 
 }
