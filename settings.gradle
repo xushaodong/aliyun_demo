@@ -1,0 +1,1 @@
+include ':app', ':QuSdk-RC', ':snap_core'

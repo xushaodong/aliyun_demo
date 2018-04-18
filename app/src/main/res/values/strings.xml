@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ALiYunDemo</string>
+    <string name="need_permission">请给出相应的权限</string>
+</resources>
